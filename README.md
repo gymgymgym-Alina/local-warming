@@ -3,7 +3,7 @@
 DSC 106 final project. An explorable explanation about why a global average
 temperature target says very little about any particular city.
 
-Live page: https://gymgymgym-Alina.github.io/dsc106-final-project/
+Live page: https://gymgymgym-Alina.github.io/local-warming/
 
 Team: TBD
 

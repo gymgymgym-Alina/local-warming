@@ -71,8 +71,18 @@
     <p>A global average is a budget, not a forecast for a place. The same 5 degrees of global warming is 3 degrees in one city and 7 in another, and the spread between models is almost as wide as the spread between pathways. If you want to know what warming means for somewhere, you have to ask about somewhere.</p>
   </section>
 
+  <section class="writeup" id="writeup">
+    <h2>Project writeup</h2>
+
+    <h3>What have you done so far?</h3>
+    <p>We settled on the question and built the whole data pipeline behind it. We pull CMIP6 monthly near surface air temperature from the Pangeo archive on Google Cloud, sample the nearest model grid point to each of 30 cities in 24 countries, average to annual means, and express every value as warming against that city's own 1981 to 2010 baseline. That gives us 28,440 rows across four models and three experiments, with no gaps. We then built this page as a single scrolling article with four linked D3 charts: a ranked dot chart of all 30 cities, a line chart of the two emissions pathways, an interactive world map, and a per model comparison for whichever city is pinned. The map is the main interaction. It has a year slider from 1950 to 2100, a toggle between SSP1-2.6 and SSP5-8.5, and clicking any city pins it so the two charts below redraw for that city. Every chart has a hover tooltip, and the line charts have a crosshair that reads out all series at the hovered year. The page is published on GitHub Pages and renders in both light and dark mode.</p>
+
+    <h3>What will be the most challenging part of your project, and why?</h3>
+    <p>The hardest part will be the writing, not the code. Right now this page is four good charts stacked under four headings, and that is not yet an explorable explanation. An explorable explanation needs the prose to hand the reader from one chart to the next, so that each interaction answers a question the previous paragraph just raised, and we have not done that work yet. The second challenge is annotation. Our charts currently explain themselves through captions sitting underneath them, but the rubric scores annotations drawn onto the chart itself, and marking up a map and four line charts without crowding them is genuinely fiddly. The third challenge is that our data is annual means, which means we can show degrees but not the thing people actually feel, which is how many hot days a year a city gets. Daily CMIP6 data does exist in the same archive, but coverage is incomplete and the download is slow, so we are treating it as a stretch goal with a hard cutoff rather than something the project depends on. The last challenge is making the interaction earn its points. Clicking a city currently updates two charts, which is useful, but it does not yet reveal a pattern that a well chosen static chart could not, and closing that gap is the difference between a page that works and a page that is worth reading.</p>
+  </section>
+
   <footer>
-    <p>Team: TBD. Data: CMIP6 monthly surface air temperature from the Pangeo Google Cloud archive, four models, sampled at the nearest grid point to each city.</p>
+    <p>Abigail Suwargo, Alina Gao, Fei Liang. DSC 106, Fall 2026. Data: CMIP6 monthly surface air temperature from the Pangeo Google Cloud archive, four models, sampled at the nearest grid point to each city.</p>
   </footer>
 
 </main>

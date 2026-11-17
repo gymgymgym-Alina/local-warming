@@ -179,3 +179,29 @@ footer {
 @media (min-width: 1150px) {
   figure { width: var(--wide); margin-left: calc((var(--measure) - var(--wide)) / 2); }
 }
+
+.writeup {
+  border-top: 1px solid var(--ring);
+  margin-top: 3rem;
+  padding-top: 2rem;
+}
+
+.writeup h2 {
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+  font-family: var(--sans);
+}
+
+.writeup h3 {
+  font-family: var(--sans);
+  font-size: 1rem;
+  margin: 1.6rem 0 0.5rem;
+  color: var(--ink);
+}
+
+.writeup p {
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
