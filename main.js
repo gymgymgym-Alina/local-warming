@@ -94,12 +94,28 @@ function lineChart(sel, height, series, { yLabel, xDomain, pad = { t: 24, r: 76,
     .attr("stroke-dasharray", d => d.dash || null)
     .attr("d", d => line(d.values));
 
-  g.selectAll("text.end").data(series.filter(s => s.label !== false)).join("text")
-    .attr("class", "mark-label end")
-    .attr("x", iw + 6)
-    .attr("y", d => y(d.values.at(-1).y) + 4)
-    .attr("fill", d => d.color)
-    .text(d => d.name);
+  const labeled = series.filter(s => s.label !== false)
+    .map(s => ({ s, ly: y(s.values.at(-1).y), ty: y(s.values.at(-1).y) }))
+    .sort((a, b) => a.ty - b.ty);
+  const GAP = 13;
+  for (let i = 1; i < labeled.length; i++)
+    labeled[i].ty = Math.max(labeled[i].ty, labeled[i - 1].ty + GAP);
+  const over = labeled.length ? labeled.at(-1).ty - ih : 0;
+  if (over > 0) labeled.forEach(d => { d.ty -= over; });
+
+  const ends = g.selectAll("g.end").data(labeled).join("g").attr("class", "end");
+  ends.filter(d => Math.abs(d.ty - d.ly) > 2).append("polyline")
+    .attr("class", "note-line")
+    .attr("stroke", d => d.s.color)
+    .attr("stroke-width", 0.8)
+    .attr("opacity", 0.55)
+    .attr("points", d => `${iw},${d.ly} ${iw + 3},${d.ly} ${iw + 3},${d.ty} ${iw + 5},${d.ty}`);
+  ends.append("text")
+    .attr("class", "mark-label")
+    .attr("x", iw + 7)
+    .attr("y", d => d.ty + 4)
+    .attr("fill", d => d.s.color)
+    .text(d => d.s.name);
 
   const rule = g.append("line").attr("class", "note-line").attr("y1", 0).attr("y2", ih).style("opacity", 0);
   const dots = g.append("g");
