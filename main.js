@@ -1,6 +1,6 @@
 const MODELS = ["CanESM5", "GFDL-ESM4", "IPSL-CM6A-LR", "MRI-ESM2-0"];
 const SCEN_LABEL = { ssp126: "SSP1-2.6", ssp585: "SSP5-8.5" };
-const state = { year: 2095, scenario: "ssp585", city: "San Diego" };
+const state = { year: 2095, scenario: "ssp585", city: "San Diego", models: new Set(MODELS) };
 
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const ramp = () => d3.scaleSequential(
@@ -65,12 +65,18 @@ function frame(sel, height) {
   return { svg: el.append("svg").attr("viewBox", `0 0 ${w} ${height}`), w, h: height };
 }
 
-function legend(sel, items) {
-  d3.select(sel).html(items.map(i =>
-    `<span><i style="background:${i.color}"></i>${i.name}</span>`).join(""));
+function legend(sel, items, onToggle) {
+  const el = d3.select(sel).html("");
+  const tag = onToggle ? "button" : "span";
+  el.selectAll(tag).data(items).join(tag)
+    .attr("class", d => onToggle ? "toggle" + (d.on ? "" : " is-off") : null)
+    .attr("type", onToggle ? "button" : null)
+    .attr("aria-pressed", d => onToggle ? String(!!d.on) : null)
+    .html(d => `<i style="background:${d.on === false ? "transparent" : d.color};box-shadow:inset 0 0 0 2px ${d.color}"></i>${d.name}`)
+    .on("click", onToggle ? (ev, d) => onToggle(d.name) : null);
 }
 
-function lineChart(sel, height, series, { yLabel, xDomain, pad = { t: 24, r: 76, b: 32, l: 46 } }) {
+function lineChart(sel, height, series, { yLabel, xDomain, yDomain, pad = { t: 24, r: 76, b: 32, l: 46 } }) {
   const { svg, w } = frame(sel, height);
   const iw = w - pad.l - pad.r, ih = height - pad.t - pad.b;
   const g = svg.append("g").attr("transform", `translate(${pad.l},${pad.t})`);
@@ -78,7 +84,7 @@ function lineChart(sel, height, series, { yLabel, xDomain, pad = { t: 24, r: 76,
   if (!all.length) return;
 
   const x = d3.scaleLinear().domain(xDomain || d3.extent(all, d => d.x)).range([0, iw]);
-  const y = d3.scaleLinear().domain(d3.extent(all, d => d.y)).nice().range([ih, 0]);
+  const y = d3.scaleLinear().domain(yDomain || d3.extent(all, d => d.y)).nice().range([ih, 0]);
 
   g.append("g").attr("class", "grid").call(d3.axisLeft(y).ticks(5).tickSize(-iw).tickFormat(""));
   g.append("g").attr("class", "axis").attr("transform", `translate(0,${ih})`)
@@ -217,10 +223,25 @@ function draw() {
     { name: "30-city mean", color: css("--muted"), dash: "4 3", values: path(null, "ssp585") }
   ], { yLabel: `${state.city}, both pathways` });
 
-  lineChart("#chart-models", 320,
-    MODELS.map((m, i) => ({ name: m, color: seriesColor(i + 1), values: path(state.city, "ssp585", m) })),
-    { yLabel: `${state.city}, SSP5-8.5, by model` });
-  legend("#legend-models", MODELS.map((m, i) => ({ name: m, color: seriesColor(i + 1) })));
+  const allModels = MODELS.map((m, i) => ({
+    name: m, color: seriesColor(i + 1), values: path(state.city, "ssp585", m)
+  }));
+  const span = d3.extent(allModels.flatMap(s => s.values), d => d.y);
+
+  lineChart("#chart-models", 320, allModels.filter(s => state.models.has(s.name)),
+    { yLabel: `${state.city}, SSP5-8.5, by model`, yDomain: span });
+
+  legend("#legend-models", allModels.map(s => ({
+    name: s.name, color: s.color, on: state.models.has(s.name)
+  })), name => {
+    if (state.models.has(name)) {
+      if (state.models.size === 1) return;
+      state.models.delete(name);
+    } else {
+      state.models.add(name);
+    }
+    draw();
+  });
 }
 
 Promise.all([
