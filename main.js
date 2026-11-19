@@ -176,9 +176,13 @@ function rankChart() {
 }
 
 function mapChart() {
-  const height = 400;
-  const { svg, w } = frame("#chart-map", height);
   const land = { type: "FeatureCollection", features: D.world.features };
+  // size the map to the land's own shape so there is no empty band above or below it
+  const boxW = d3.select("#chart-map").node().getBoundingClientRect().width || 640;
+  const fit = d3.geoNaturalEarth1().fitWidth(boxW - 12, land);
+  const [[, y0], [, y1]] = d3.geoPath(fit).bounds(land);
+  const height = Math.ceil(y1 - y0) + 20;
+  const { svg, w } = frame("#chart-map", height);
   const proj = d3.geoNaturalEarth1().fitExtent([[6, 10], [w - 6, height - 10]], land);
   const geo = d3.geoPath(proj);
   const max = d3.max(D.cities, d => d.end);

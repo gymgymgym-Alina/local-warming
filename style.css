@@ -54,7 +54,7 @@ body {
   margin: 0;
   background: var(--plane);
   color: var(--ink);
-  font: 17px/1.65 Georgia, "Iowan Old Style", serif;
+  font: 17px/1.5 Georgia, "Iowan Old Style", serif;
 }
 
 h1, h2, .subtitle, .controls, figcaption, .legend, .tip, .axis text, .mark-label {
@@ -64,7 +64,7 @@ h1, h2, .subtitle, .controls, figcaption, .legend, .tip, .axis text, .mark-label
 .hook {
   max-width: var(--measure);
   margin: 0 auto;
-  padding: 5rem 1.25rem 2rem;
+  padding: 3rem 1.25rem 1rem;
 }
 
 .hook h1 {
@@ -79,15 +79,15 @@ h1, h2, .subtitle, .controls, figcaption, .legend, .tip, .axis text, .mark-label
 section {
   max-width: var(--measure);
   margin: 0 auto;
-  padding: 2.5rem 1.25rem;
+  padding: 1.25rem 1.25rem;
 }
 
 section h2 { font-size: 1.5rem; letter-spacing: -0.01em; margin: 0 0 0.6rem; }
-section p { margin: 0 0 1.25rem; }
-main { padding-bottom: 5rem; }
+section p { margin: 0 0 0.9rem; }
+main { padding-bottom: 3rem; }
 
 figure {
-  margin: 1.75rem 0;
+  margin: 1rem 0;
   background: var(--surface);
   border: 1px solid var(--ring);
   border-radius: 8px;
@@ -165,12 +165,12 @@ figcaption {
 .tip.on { opacity: 1; }
 .tip b { font-variant-numeric: tabular-nums; }
 
-.takeaway { border-top: 2px solid var(--ink); padding-top: 1.75rem; }
+.takeaway { border-top: 2px solid var(--ink); padding-top: 1.25rem; margin-top: 1rem; }
 
 footer {
   max-width: var(--measure);
-  margin: 3rem auto 0;
-  padding: 1.5rem 1.25rem 0;
+  margin: 2rem auto 0;
+  padding: 1.25rem 1.25rem 0;
   border-top: 1px solid var(--ring);
   font-size: 0.82rem;
   color: var(--ink-2);
@@ -182,8 +182,8 @@ footer {
 
 .writeup {
   border-top: 1px solid var(--ring);
-  margin-top: 3rem;
-  padding-top: 2rem;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
 }
 
 .writeup h2 {
@@ -197,7 +197,7 @@ footer {
 .writeup h3 {
   font-family: var(--sans);
   font-size: 1rem;
-  margin: 1.6rem 0 0.5rem;
+  margin: 1.1rem 0 0.4rem;
   color: var(--ink);
 }
 
