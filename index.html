@@ -16,6 +16,20 @@
 <main>
 
   <section>
+    <figure class="twin">
+      <div class="controls">
+        <label for="twin-pick">Pick a city
+          <select id="twin-pick"></select>
+        </label>
+      </div>
+      <p class="twin-line" id="twin-line"></p>
+      <div id="chart-twin" class="chart"></div>
+      <p class="twin-detail" id="twin-detail"></p>
+      <figcaption>We took each city's average temperature in 2090 to 2100 under SSP5-8.5, then looked for the city whose temperature today is closest to it. Eight of the thirty have no match at all, because their future is hotter than any city here is today.</figcaption>
+    </figure>
+
+    <p>Degrees are hard to feel. Places are not. Here is the same thing for all thirty cities at once, as plain numbers.</p>
+
     <figure>
       <div id="chart-rank" class="chart"></div>
       <figcaption>Warming in 2090 to 2100 against each city's own 1981 to 2010 average, under SSP5-8.5, averaged over four CMIP6 models.</figcaption>

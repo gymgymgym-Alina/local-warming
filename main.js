@@ -41,6 +41,29 @@ function prepare(rows, world) {
       if (vals.length) globalMean.set(`${s}|${y}`, d3.mean(vals));
     }
 
+  const avg = (c, scen, y0, y1) => d3.mean(
+    rows.filter(r => r.city === c && r.scenario === scen && r.year >= y0 && r.year <= y1),
+    r => r.temp_c);
+
+  cities.forEach(c => {
+    c.today = avg(c.city, "historical", 1981, 2010);
+    c.future = avg(c.city, "ssp585", 2090, 2100);
+  });
+
+  const NO_MATCH = 1.0;
+  cities.forEach(c => {
+    let best = null;
+    for (const o of cities) {
+      if (o.city === c.city) continue;
+      const err = Math.abs(o.today - c.future);
+      if (!best || err < best.err) best = { city: o, err };
+    }
+    c.twin = best.city;
+    c.twinErr = best.err;
+    c.noMatch = best.err > NO_MATCH;
+    c.hotter = c.future > d3.max(cities.filter(o => o.city !== c.city), o => o.today);
+  });
+
   D = { rows, world, mean, byModel, cities, years, globalMean };
 }
 
@@ -144,6 +167,72 @@ function lineChart(sel, height, series, { yLabel, xDomain, yDomain, pad = { t: 2
     .on("mouseleave", () => { hideTip(); rule.style("opacity", 0); dots.selectAll("circle").remove(); });
 }
 
+function twinChart() {
+  const c = D.cities.find(d => d.city === state.city);
+  const t = c.twin;
+  const f = d3.format(".1f");
+
+  const headline = !c.noMatch
+    ? `By 2100, <b>${c.city}</b> will feel like <b>${t.city}</b> does today.`
+    : c.hotter
+      ? `By 2100, <b>${c.city}</b> will be hotter than any city on this map is today.`
+      : `By 2100, <b>${c.city}</b> lands between the cities on this map.`;
+
+  const stem = `${c.city} averages ${f(c.today)}\u00B0C today and ${f(c.future)}\u00B0C by the end of the century.`;
+  const detail = !c.noMatch
+    ? `${stem} ${t.city} averages ${f(t.today)}\u00B0C today.`
+    : c.hotter
+      ? `${stem} The closest city here is ${t.city}, and it is still ${f(c.twinErr)} degrees cooler than that.`
+      : `${stem} No city here is close, the nearest being ${t.city}, ${f(c.twinErr)} degrees away.`;
+
+  d3.select("#twin-line").html(headline);
+  d3.select("#twin-detail").html(detail);
+
+  const height = 360;
+  const { svg, w } = frame("#chart-twin", height);
+  const land = { type: "FeatureCollection", features: D.world.features };
+  const proj = d3.geoNaturalEarth1().fitExtent([[8, 12], [w - 8, height - 12]], land);
+
+  svg.append("g").selectAll("path").data(land.features).join("path")
+    .attr("class", "land").attr("d", d3.geoPath(proj));
+
+  const warm = css("--ramp-3");
+  const cool = css("--series-1");
+  const a = proj([c.lon, c.lat]);
+  const b = proj([t.lon, t.lat]);
+
+  if (!c.noMatch) {
+    const lift = Math.hypot(b[0] - a[0], b[1] - a[1]) * 0.3;
+    svg.append("path")
+      .attr("class", "twin-arc")
+      .attr("d", `M${a[0]},${a[1]} Q${(a[0] + b[0]) / 2},${(a[1] + b[1]) / 2 - lift} ${b[0]},${b[1]}`)
+      .attr("stroke", warm);
+
+    const pin = svg.append("g");
+    pin.append("circle").attr("class", "twin-dot")
+      .attr("cx", b[0]).attr("cy", b[1]).attr("r", 7).attr("fill", cool);
+    pin.append("text").attr("class", "twin-label")
+      .attr("x", b[0]).attr("y", b[1] + 22).attr("text-anchor", "middle")
+      .attr("fill", cool)
+      .text(`${t.city} today, ${f(t.today)}\u00B0`);
+  }
+
+  const here = svg.append("g");
+  here.append("circle").attr("class", "twin-dot")
+    .attr("cx", a[0]).attr("cy", a[1]).attr("r", 8).attr("fill", warm);
+  here.append("text").attr("class", "twin-label")
+    .attr("x", a[0]).attr("y", a[1] - 15).attr("text-anchor", "middle")
+    .attr("fill", warm)
+    .text(`${c.city} in 2100, ${f(c.future)}\u00B0`);
+
+  if (c.noMatch) {
+    svg.append("text").attr("class", "twin-label")
+      .attr("x", a[0]).attr("y", a[1] + 24).attr("text-anchor", "middle")
+      .attr("fill", css("--ink-2"))
+      .text(c.hotter ? "no city here is that hot today" : "no close match on this map");
+  }
+}
+
 function rankChart() {
   const height = D.cities.length * 17 + 56;
   const { svg, w } = frame("#chart-rank", height);
@@ -165,7 +254,7 @@ function rankChart() {
     .style("cursor", "pointer")
     .on("mousemove", (ev, d) => showTip(ev, `<b>${d.city}</b>, ${d.country}<br>warming <b>${d.end.toFixed(2)}°</b>`))
     .on("mouseleave", hideTip)
-    .on("click", (ev, d) => { state.city = d.city; draw(); });
+    .on("click", (ev, d) => { state.city = d.city; d3.select("#twin-pick").property("value", d.city); draw(); });
 
   row.append("line").attr("x1", 0).attr("x2", d => x(d.end))
     .attr("stroke", "var(--grid)").attr("stroke-width", 2).attr("stroke-linecap", "round");
@@ -201,13 +290,14 @@ function mapChart() {
     .on("mousemove", (ev, d) => showTip(ev,
       `<b>${d.city}</b>, ${d.country}<br>${state.year} <b>${d.v.toFixed(2)}°</b> warmer`))
     .on("mouseleave", hideTip)
-    .on("click", (ev, d) => { state.city = d.city; draw(); });
+    .on("click", (ev, d) => { state.city = d.city; d3.select("#twin-pick").property("value", d.city); draw(); });
 
   const stops = d3.range(0, 6).map(i => i * max / 5);
   legend("#legend-map", stops.map(v => ({ name: v.toFixed(1) + "°", color: color(v) })));
 }
 
 function draw() {
+  twinChart();
   rankChart();
 
   lineChart("#chart-paths", 320, [
@@ -253,6 +343,13 @@ Promise.all([
   d3.json("data/world_countries.json")
 ]).then(([rows, world]) => {
   prepare(rows, world);
+
+  const pick = d3.select("#twin-pick");
+  pick.selectAll("option")
+    .data(D.cities.map(c => c.city).sort(d3.ascending))
+    .join("option").attr("value", d => d).text(d => d);
+  pick.property("value", state.city);
+  pick.on("change", e => { state.city = e.target.value; draw(); });
 
   const slider = document.getElementById("year");
   const out = document.getElementById("year-out");
